@@ -55,7 +55,7 @@ const LoadingScreen: React.FC = () => {
         <View style={styles.iconContainer}>
           <Ionicons name="restaurant" size={48} color="white" />
         </View>
-        <Text style={styles.appName}>Rango</Text>
+        <Text style={styles.appName}>Rappy</Text>
       </Animated.View>
       
       <View style={styles.loadingContainer}>

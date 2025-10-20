@@ -27,7 +27,7 @@ export default function CadastroSucesso() {
           </div>
           <CardTitle className="text-3xl">Cadastro Realizado com Sucesso!</CardTitle>
           <CardDescription className="text-lg">
-            Bem-vindo à equipe Rango Delivery
+            Bem-vindo à equipe Rappy Delivery
           </CardDescription>
         </CardHeader>
 
@@ -127,7 +127,7 @@ export default function CadastroSucesso() {
           {/* Informações de Contato */}
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-center text-muted-foreground">
-              <strong>Dúvidas?</strong> Entre em contato: suporte@rango.com ou (11) 3000-0000
+              <strong>Dúvidas?</strong> Entre em contato: suporte@rappy.com ou (11) 3000-0000
             </p>
           </div>
 

@@ -105,15 +105,15 @@ const OrdersActive = () => {
     const pendingCount = activeOrders.filter(o => o.status === 'pending').length;
     
     if (pendingCount > 0) {
-      document.title = `(${pendingCount}) Novos Pedidos - Rango`;
+      document.title = `(${pendingCount}) Novos Pedidos - Rappy`;
     } else if (activeOrders.length > 0) {
-      document.title = `(${activeOrders.length}) Pedidos Ativos - Rango`;
+      document.title = `(${activeOrders.length}) Pedidos Ativos - Rappy`;
     } else {
-      document.title = 'Pedidos Ativos - Rango';
+      document.title = 'Pedidos Ativos - Rappy';
     }
 
     return () => {
-      document.title = 'Rango';
+      document.title = 'Rappy';
     };
   }, [activeOrders]);
 

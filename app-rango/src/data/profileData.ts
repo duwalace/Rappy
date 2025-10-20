@@ -6,8 +6,8 @@ export const mainMenuItems = [
   },
   { 
     icon: 'diamond-outline' as const, 
-    text: 'Clube iFood', 
-    screen: 'iFoodClub' 
+    text: 'Clube Rappy', 
+    screen: 'RappyClub' 
   },
   { 
     icon: 'pricetag-outline' as const, 
@@ -55,7 +55,7 @@ export const supportMenuItems = [
 ];
 
 export const promoBannerData = {
-  title: 'Chegou a Comunidade iFood',
+  title: 'Chegou a Comunidade Rappy',
   subtitle: 'Faça parte você também!',
   imageSource: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=80&h=80&fit=crop',
 };

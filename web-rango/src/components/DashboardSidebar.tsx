@@ -1,23 +1,17 @@
 import { 
   BarChart3,
   ShoppingBag,
-  Clock,
   History,
-  TrendingUp,
   DollarSign,
   Package,
   Users,
   UtensilsCrossed,
   Grid3X3,
   Plus,
-  Eye,
   Archive,
   Tag,
   Ticket,
-  Gift,
   Bell,
-  Star,
-  UserCheck,
   Settings,
   MapPin,
   CreditCard,
@@ -71,7 +65,6 @@ const getMenuSections = (pendingOrdersCount: number): MenuSection[] => [
   {
     title: "RELATÓRIOS",
     items: [
-      { title: "Desempenho da Loja", icon: TrendingUp, url: "/dashboard/reports/performance", badge: null },
       { title: "Relatório Financeiro", icon: DollarSign, url: "/dashboard/reports/financial", badge: null },
       { title: "Análise de Itens", icon: Package, url: "/dashboard/reports/items", badge: null },
       { title: "Análise de Clientes", icon: Users, url: "/dashboard/reports/customers", badge: null },
@@ -83,8 +76,7 @@ const getMenuSections = (pendingOrdersCount: number): MenuSection[] => [
       { title: "Gerenciamento de Itens", icon: UtensilsCrossed, url: "/dashboard/products", badge: null },
       { title: "Categorias do Cardápio", icon: Grid3X3, url: "/dashboard/menu/categories", badge: null },
       { title: "Complementos e Variações", icon: Plus, url: "/dashboard/menu/complements", badge: null },
-      { title: "Disponibilidade de Itens", icon: Eye, url: "/dashboard/menu/availability", badge: null },
-      { title: "Controle de Estoque", icon: Archive, url: "/dashboard/menu/inventory", badge: null },
+      { title: "Disponibilidade e Estoque", icon: Archive, url: "/dashboard/menu/inventory", badge: null },
     ]
   },
   {
@@ -92,15 +84,7 @@ const getMenuSections = (pendingOrdersCount: number): MenuSection[] => [
     items: [
       { title: "Promoções", icon: Tag, url: "/dashboard/promotions", badge: null },
       { title: "Cupons de Desconto", icon: Ticket, url: "/dashboard/marketing/coupons", badge: null },
-      { title: "Programa de Fidelidade", icon: Gift, url: "/dashboard/marketing/loyalty", badge: null },
       { title: "Notificações", icon: Bell, url: "/dashboard/marketing/notifications", badge: null },
-    ]
-  },
-  {
-    title: "CLIENTES",
-    items: [
-      { title: "Avaliações", icon: Star, url: "/dashboard/reviews", badge: null },
-      { title: "Base de Clientes (CRM)", icon: UserCheck, url: "/dashboard/customers/crm", badge: null },
     ]
   },
   {
@@ -159,7 +143,7 @@ export function DashboardSidebar() {
             </div>
             {open && (
               <div>
-                <span className="text-lg font-bold text-foreground">Rango Admin</span>
+                <span className="text-lg font-bold text-foreground">Rappy Admin</span>
                 <p className="text-xs text-muted-foreground">Painel Profissional</p>
               </div>
             )}

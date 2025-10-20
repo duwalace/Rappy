@@ -19,7 +19,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    /* iFood-style red primary */
+    /* Rappy-style red primary */
     --primary: 355 85% 52%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 355 85% 47%;
@@ -67,7 +67,7 @@ All colors MUST be HSL.
     --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Custom design tokens */
-    --ifood-red: 355 85% 52%;
+    --rappy-red: 355 85% 52%;
     --text-primary: 0 0% 15%;
     --text-secondary: 0 0% 45%;
     --bg-light: 0 0% 98%;

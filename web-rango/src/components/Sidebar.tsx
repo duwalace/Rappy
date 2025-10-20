@@ -50,7 +50,7 @@ export const ProductSidebar = () => {
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <UtensilsCrossed className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-bold text-lg text-foreground">iFood</span>
+          <span className="font-bold text-lg text-foreground">Rappy</span>
         </div>
       </div>
 

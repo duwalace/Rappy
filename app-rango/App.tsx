@@ -16,6 +16,7 @@ import { CartProvider } from './src/contexts/CartContext';
 import LoginScreen from './src/Cliente/LoginScreen';
 import SignupScreen from './src/Cliente/SignupScreen';
 import AuthScreen from './src/Cliente/AuthScreen';
+import ForgotPasswordScreen from './src/Cliente/ForgotPasswordScreen';
 import DeliveryAuthScreen from './src/Entregador/DeliveryAuthScreen';
 import DeliveryLoginScreen from './src/Entregador/DeliveryLoginScreen';
 import DeliverySignupScreen from './src/Entregador/DeliverySignupScreen';
@@ -74,6 +75,7 @@ function AuthStackNavigator() {
       <AuthStack.Screen name="AuthMain" component={AuthScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="DeliveryAuth" component={DeliveryAuthScreen} />
       <AuthStack.Screen name="DeliveryLogin" component={DeliveryLoginScreen} />
       <AuthStack.Screen name="DeliverySignup" component={DeliverySignupScreen} />

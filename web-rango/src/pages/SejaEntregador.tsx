@@ -346,7 +346,7 @@ export default function SejaEntregador() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Rocket className="h-8 w-8 text-orange-500" />
-            <span className="text-2xl font-bold">Rango Delivery</span>
+            <span className="text-2xl font-bold">Rappy Delivery</span>
           </div>
           <Button variant="outline" onClick={() => navigate('/login')}>
             Já sou entregador
@@ -358,7 +358,7 @@ export default function SejaEntregador() {
         {/* Hero Section */}
         {currentStep === 1 && (
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4">Seja um Entregador Rango</h1>
+            <h1 className="text-4xl font-bold mb-4">Seja um Entregador Rappy</h1>
             <p className="text-xl text-muted-foreground mb-6">
               Ganhe dinheiro entregando com flexibilidade e autonomia
             </p>

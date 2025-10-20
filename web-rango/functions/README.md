@@ -1,6 +1,6 @@
 # Cloud Functions - Módulo de Entregadores
 
-Cloud Functions do Firebase para gerenciar o sistema de entregas do Rango.
+Cloud Functions do Firebase para gerenciar o sistema de entregas do Rappy.
 
 ## 📦 Funções Implementadas
 

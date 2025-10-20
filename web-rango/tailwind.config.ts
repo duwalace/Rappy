@@ -57,8 +57,8 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        ifood: {
-          red: "hsl(var(--ifood-red))",
+        rappy: {
+          red: "hsl(var(--rappy-red))",
         },
       },
       borderRadius: {

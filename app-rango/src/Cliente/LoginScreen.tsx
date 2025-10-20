@@ -53,8 +53,7 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleForgotPassword = () => {
-    console.log('Esqueci minha senha');
-    // Implementar navegação para tela de recuperação de senha
+    navigation.navigate('ForgotPassword' as never);
   };
 
   return (

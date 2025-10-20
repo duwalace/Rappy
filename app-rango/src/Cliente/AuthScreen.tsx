@@ -38,16 +38,6 @@ const AuthScreen: React.FC = () => {
     navigation.navigate('Signup' as never);
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Login com Google');
-    // Implementar autenticação com Google
-  };
-
-  const handleFacebookLogin = () => {
-    console.log('Login com Facebook');
-    // Implementar autenticação com Facebook
-  };
-
   const handleDeliveryLogin = () => {
     navigation.navigate('DeliveryAuth' as never);
   };
@@ -97,25 +87,11 @@ const AuthScreen: React.FC = () => {
             />
           </View>
           
-          {/* Seção de Login Social */}
-          <View style={styles.socialSection}>
-            <Text style={styles.socialText}>Acessar com</Text>
-            
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity 
-                style={styles.socialButton} 
-                onPress={handleGoogleLogin}
-              >
-                <Ionicons name="logo-google" size={24} color="#DB4437" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.socialButton} 
-                onPress={handleFacebookLogin}
-              >
-                <Ionicons name="logo-facebook" size={24} color="#4267B2" />
-              </TouchableOpacity>
-            </View>
+          {/* Informação */}
+          <View style={styles.infoSection}>
+            <Text style={styles.infoText}>
+              Use seu e-mail e senha para acessar sua conta
+            </Text>
           </View>
         </View>
       </ImageBackground>
@@ -164,31 +140,16 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     gap: 16,
   },
-  socialSection: {
+  infoSection: {
     marginTop: 32,
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
-  socialText: {
-    fontSize: 16,
+  infoText: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 16,
     textAlign: 'center',
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  socialButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 8,
+    lineHeight: 20,
   },
 });
 

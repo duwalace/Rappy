@@ -5,7 +5,8 @@ import {
   TouchableOpacity, 
   Text, 
   StyleSheet,
-  StatusBar 
+  StatusBar,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,114 +36,105 @@ const DeliveryAuthScreen: React.FC = () => {
     navigation.navigate('DeliverySignup' as never);
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Login com Google - Entregador');
-    // Implementar autenticação com Google para entregador
-  };
-
-  const handleFacebookLogin = () => {
-    console.log('Login com Facebook - Entregador');
-    // Implementar autenticação com Facebook para entregador
-  };
-
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Imagem de Fundo */}
-      <ImageBackground
-        source={{ 
-          uri: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=800&fit=crop' 
-        }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        {/* Botão de Voltar */}
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={28} color="white" />
-        </TouchableOpacity>
+      {/* Área Superior com Imagem */}
+      <View style={styles.topSection}>
+        <ImageBackground
+          source={require('../../assets/delivery-bg.png')}
+          style={styles.imageContainer}
+          resizeMode="cover"
+        >
+          {/* Botões no topo */}
+          <SafeAreaView style={styles.safeArea}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+              <Ionicons name="chevron-back" size={28} color="white" />
+            </TouchableOpacity>
 
-        {/* Botão Flutuante de Ajuda */}
-        <TouchableOpacity style={styles.helpButton} onPress={handleHelp}>
-          <Ionicons name="help" size={24} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.helpButton} onPress={handleHelp}>
+              <Ionicons name="help" size={24} color="white" />
+            </TouchableOpacity>
+          </SafeAreaView>
+        </ImageBackground>
+      </View>
 
-        {/* Sheet de Ações */}
+      {/* Sheet de Ações */}
+      <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
         <View style={styles.actionSheet}>
-          {/* Título da seção */}
-          <View style={styles.headerSection}>
-            <Ionicons name="bicycle" size={32} color="#EA1D2C" />
-            <Text style={styles.headerTitle}>Área do Entregador</Text>
-            <Text style={styles.headerSubtitle}>
-              Faça parte da nossa equipe de entregadores e ganhe dinheiro no seu tempo livre
-            </Text>
-          </View>
-
-          {/* Botões Principais */}
-          <View style={styles.buttonsContainer}>
-            <AuthButton
-              title="Já sou entregador"
-              variant="primary"
-              onPress={handleLogin}
-            />
-            
-            <AuthButton
-              title="Quero ser entregador"
-              variant="secondary"
-              onPress={handleRegister}
-            />
-          </View>
-          
-          {/* Seção de Login Social */}
-          <View style={styles.socialSection}>
-            <Text style={styles.socialText}>Acessar com</Text>
-            
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity 
-                style={styles.socialButton} 
-                onPress={handleGoogleLogin}
-              >
-                <Ionicons name="logo-google" size={24} color="#DB4437" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.socialButton} 
-                onPress={handleFacebookLogin}
-              >
-                <Ionicons name="logo-facebook" size={24} color="#4267B2" />
-              </TouchableOpacity>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Título da seção */}
+            <View style={styles.headerSection}>
+              <Ionicons name="bicycle" size={32} color="#EA1D2C" />
+              <Text style={styles.headerTitle}>Área do Entregador</Text>
+              <Text style={styles.headerSubtitle}>
+                Faça parte da nossa equipe de entregadores e ganhe dinheiro no seu tempo livre
+              </Text>
             </View>
-          </View>
+
+            {/* Botões Principais */}
+            <View style={styles.buttonsContainer}>
+              <AuthButton
+                title="Já sou entregador"
+                variant="primary"
+                onPress={handleLogin}
+              />
+              
+              <AuthButton
+                title="Quero ser entregador"
+                variant="secondary"
+                onPress={handleRegister}
+              />
+            </View>
+            
+            {/* Informação */}
+            <View style={styles.infoSection}>
+              <Text style={styles.infoText}>
+                Use seu e-mail e senha para acessar sua conta de entregador
+              </Text>
+            </View>
+          </ScrollView>
         </View>
-      </ImageBackground>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
-  backgroundImage: {
+  topSection: {
+    flex: 0.5, // 50% da tela para a imagem
+    minHeight: 300, // Altura mínima para web
+  },
+  imageContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    width: '100%',
+    backgroundColor: '#EA1D2C', // Fallback caso a imagem não carregue
+  },
+  safeArea: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
     width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
   helpButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -150,12 +142,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bottomSafeArea: {
+    flex: 0.5, // 50% da tela para o card
+  },
   actionSheet: {
+    flex: 1,
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 32, // Espaço extra na parte inferior
   },
   headerSection: {
     alignItems: 'center',
@@ -177,31 +185,17 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     gap: 16,
   },
-  socialSection: {
+  infoSection: {
     marginTop: 32,
+    marginBottom: 16, // Espaço extra antes dos botões do celular
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
-  socialText: {
-    fontSize: 16,
+  infoText: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 16,
     textAlign: 'center',
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  socialButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 8,
+    lineHeight: 20,
   },
 });
 

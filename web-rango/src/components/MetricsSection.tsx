@@ -47,7 +47,7 @@ export function MetricsSection() {
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-foreground">Performance</h2>
             <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-              Bom desempenho no ifood!
+              Bom desempenho no Rappy!
             </span>
           </div>
 

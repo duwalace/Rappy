@@ -95,7 +95,7 @@ const Login = () => {
           {/* Logo */}
           <div className="text-center">
             <div className="inline-flex items-center gap-1">
-              <span className="text-5xl font-bold text-primary italic">ifood</span>
+              <span className="text-5xl font-bold text-primary italic">Rappy</span>
             </div>
           </div>
 
@@ -127,9 +127,18 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Senha
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  Senha
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"

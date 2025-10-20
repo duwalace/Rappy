@@ -1,5 +1,5 @@
 
-# App iFood - React Native
+# App Rappy - React Native
 
 Este é um aplicativo de delivery de comida desenvolvido em React Native com TypeScript.
 

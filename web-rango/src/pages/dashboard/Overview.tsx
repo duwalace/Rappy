@@ -373,63 +373,6 @@ export default function Overview() {
         </CardContent>
       </Card>
 
-      {/* Informações da Loja */}
-      {store && (
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="text-xl">Informações da Loja</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Endereço</p>
-                  <p className="font-medium">
-                    {store.address?.street}, {store.address?.number} - {store.address?.neighborhood}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {store.address?.city}/{store.address?.state} - {store.address?.zipCode}
-                  </p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">Contato</p>
-                  <p className="font-medium">{store.contact?.phone}</p>
-                  <p className="text-sm text-muted-foreground">{store.contact?.email}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Entrega</p>
-                  <p className="font-medium">Tempo: {store.delivery?.deliveryTime}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Taxa: R$ {store.delivery?.deliveryFee?.toFixed(2)}
-                  </p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={store.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                    {store.isActive ? 'Ativa' : 'Inativa'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <h4 className="font-semibold">🔄 Sincronização Ativa</h4>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Suas informações estão sendo atualizadas em tempo real no app mobile. 
-                Qualquer alteração nas configurações da loja aparece instantaneamente para os clientes.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 } 
