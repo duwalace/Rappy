@@ -92,6 +92,8 @@ export const getStoresByCategory = async (category: string): Promise<Store[]> =>
  */
 export const getStoresByCategorySlug = async (categorySlug: string): Promise<Store[]> => {
   try {
+    console.log('🔍 Buscando lojas por categoria slug:', categorySlug);
+    
     // Buscar todas as lojas ativas
     const q = query(
       collection(db, STORES_COLLECTION),
@@ -101,24 +103,35 @@ export const getStoresByCategorySlug = async (categorySlug: string): Promise<Sto
     const querySnapshot = await getDocs(q);
     const stores: Store[] = [];
     
-    // Filtrar no cliente para suportar busca case-insensitive
+    // Normalizar slug de busca (remover acentos e converter para minúsculas)
+    const normalizeString = (str: string) => {
+      return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+    };
+    
+    const normalizedSearchSlug = normalizeString(categorySlug);
+    
+    // Filtrar no cliente para suportar busca case-insensitive e sem acentos
     querySnapshot.forEach((doc) => {
       const storeData = doc.data();
-      const storeCategory = (storeData.category || '').toLowerCase();
-      const searchSlug = categorySlug.toLowerCase();
+      const storeCategory = normalizeString(storeData.category || '');
       
       // Aceitar correspondência exata ou parcial
       // Ex: 'restaurantes' encontra 'Restaurante', 'Restaurantes', etc.
+      // 'farmacia' encontra 'Farmácia' (sem acento)
       if (
-        storeCategory === searchSlug ||
-        storeCategory.includes(searchSlug) ||
-        searchSlug.includes(storeCategory)
+        storeCategory === normalizedSearchSlug ||
+        storeCategory.includes(normalizedSearchSlug) ||
+        normalizedSearchSlug.includes(storeCategory)
       ) {
+        console.log(`  ✓ Loja encontrada: ${storeData.name} (categoria: ${storeData.category})`);
         stores.push({ id: doc.id, ...storeData } as Store);
       }
     });
     
-    console.log(`✅ Lojas encontradas para categoria "${categorySlug}":`, stores.length);
+    console.log(`✅ Total de lojas encontradas para "${categorySlug}":`, stores.length);
     return stores;
   } catch (error) {
     console.error('❌ Erro ao buscar lojas por slug de categoria:', error);

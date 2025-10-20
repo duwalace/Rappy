@@ -169,8 +169,9 @@ const ProductScreen: React.FC = () => {
             onPress={handleAddToCart}
             activeOpacity={0.8}
           >
+            <Ionicons name="cart-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
             <Text style={styles.addButtonText}>
-              Adicionar • {formatPrice(totalPrice)}
+              Adicionar à Sacola • {formatPrice(totalPrice)}
             </Text>
           </TouchableOpacity>
         </View>
@@ -301,6 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EA1D2C',
     borderRadius: 8,
     paddingVertical: 16,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { shadowPresets } from '../utils/shadowUtils';
+import { spacing, fontSize, iconSize, borderRadius, scale, responsiveValue } from '../utils/responsive';
+import theme from '../styles/theme';
 
 interface Restaurant {
   id: string;
@@ -29,7 +31,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onPress, on
         
         {/* Badge de Avaliação */}
         <View style={styles.ratingBadge}>
-          <Ionicons name="star" size={12} color="#FFD700" />
+          <Ionicons name="star" size={iconSize.xs} color={theme.colors.gold} />
           <Text style={styles.ratingText}>{restaurant.rating}</Text>
         </View>
         
@@ -40,8 +42,8 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onPress, on
         >
           <Ionicons 
             name={restaurant.isFavorite ? "heart" : "heart-outline"} 
-            size={20} 
-            color={restaurant.isFavorite ? "#EA1D2C" : "white"} 
+            size={iconSize.md} 
+            color={restaurant.isFavorite ? theme.colors.primary : theme.colors.textInverse} 
           />
         </TouchableOpacity>
         
@@ -68,12 +70,28 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onPress, on
   );
 };
 
+const cardWidth = responsiveValue({
+  small: 260,
+  medium: 280,
+  tablet: 320,
+  desktop: 350,
+  default: Platform.OS === 'web' ? 280 : 280,
+});
+
+const imageHeight = responsiveValue({
+  small: 140,
+  medium: 160,
+  tablet: 180,
+  desktop: 200,
+  default: Platform.OS === 'web' ? 150 : 160,
+});
+
 const styles = StyleSheet.create({
   container: {
-    width: 280,
-    marginRight: 16,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    width: cardWidth,
+    marginRight: spacing.md,
+    backgroundColor: theme.colors.card,
+    borderRadius: borderRadius.md,
     ...shadowPresets.card,
   },
   imageContainer: {
@@ -81,77 +99,77 @@ const styles = StyleSheet.create({
   },
   restaurantImage: {
     width: '100%',
-    height: 160,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    height: imageHeight,
+    borderTopLeftRadius: borderRadius.md,
+    borderTopRightRadius: borderRadius.md,
   },
   ratingBadge: {
     position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    top: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: theme.colors.overlayDark,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: borderRadius.sm,
   },
   ratingText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 2,
+    color: theme.colors.textInverse,
+    fontSize: fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginLeft: spacing.xs / 2,
   },
   favoriteButton: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+    backgroundColor: theme.colors.overlayLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sponsoredTag: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: '#EA1D2C',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    bottom: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
   sponsoredText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
+    color: theme.colors.textInverse,
+    fontSize: fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   infoContainer: {
-    padding: 12,
+    padding: spacing.sm,
   },
   headerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    marginRight: spacing.sm,
   },
   textInfo: {
     flex: 1,
   },
   restaurantName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+    marginBottom: spacing.xs,
   },
   deliveryInfo: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: fontSize.base,
+    color: theme.colors.textLight,
   },
 });
 

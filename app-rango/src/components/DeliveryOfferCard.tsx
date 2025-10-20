@@ -14,7 +14,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { DeliveryOffer, acceptOffer, declineOffer, getOfferTimeRemaining, formatCurrency } from '../services/deliveryOfferService';
+import { DeliveryOffer, declineOffer, getOfferTimeRemaining, formatCurrency } from '../services/deliveryOfferService';
+import { assignDeliveryPartner } from '../services/deliveryLogicService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -58,10 +59,11 @@ const DeliveryOfferCard: React.FC<DeliveryOfferCardProps> = ({
     
     setAccepting(true);
     try {
-      const result = await acceptOffer(offer.id, partnerId);
+      // Usar deliveryLogicService ao invés de Cloud Function
+      const result = await assignDeliveryPartner(offer.id, partnerId);
       
       if (result.success) {
-        console.log('✅ Oferta aceita!');
+        console.log('✅ Oferta aceita com deliveryLogicService!');
         onAccepted?.();
       } else {
         alert(result.error || 'Não foi possível aceitar a oferta');

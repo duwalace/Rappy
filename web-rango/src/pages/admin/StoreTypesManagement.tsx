@@ -44,7 +44,8 @@ import {
   Trash2,
   RefreshCw,
   CheckCircle,
-  XCircle
+  XCircle,
+  Image as ImageIcon
 } from "lucide-react";
 import { 
   getStoreTypes, 
@@ -54,11 +55,13 @@ import {
   StoreType 
 } from "@/services/adminService";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUploader } from "@/components/dashboard/ImageUploader";
 
 interface StoreTypeForm {
   name: string;
   icon: string;
   description: string;
+  imageUrl: string;
 }
 
 export default function StoreTypesManagement() {
@@ -98,7 +101,7 @@ export default function StoreTypesManagement() {
 
   const handleOpenCreateDialog = () => {
     setSelectedType(null);
-    setFormData({ name: '', icon: '🏪', description: '' });
+    setFormData({ name: '', icon: '🏪', description: '', imageUrl: '' });
     setFormDialog(true);
   };
 
@@ -107,7 +110,8 @@ export default function StoreTypesManagement() {
     setFormData({
       name: type.name,
       icon: type.icon || '🏪',
-      description: type.description || ''
+      description: type.description || '',
+      imageUrl: type.imageUrl || ''
     });
     setFormDialog(true);
   };
@@ -134,7 +138,8 @@ export default function StoreTypesManagement() {
         await updateStoreType(selectedType.id, {
           name: formData.name,
           icon: formData.icon,
-          description: formData.description
+          description: formData.description,
+          imageUrl: formData.imageUrl
         });
         toast({
           title: 'Sucesso',
@@ -142,7 +147,7 @@ export default function StoreTypesManagement() {
         });
       } else {
         // Criar
-        await addStoreType(formData.name, formData.icon, formData.description);
+        await addStoreType(formData.name, formData.icon, formData.description, formData.imageUrl);
         toast({
           title: 'Sucesso',
           description: 'Categoria criada com sucesso',
@@ -400,6 +405,26 @@ export default function StoreTypesManagement() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Imagem da Categoria
+              </Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Imagem quadrada que será exibida no app ao lado da categoria (recomendado: 200x200px)
+              </p>
+              <div className="max-w-[200px]">
+                <ImageUploader
+                  currentImage={formData.imageUrl}
+                  onImageUploaded={(url) => setFormData({ ...formData, imageUrl: url })}
+                  folder="store_types"
+                  aspectRatio="square"
+                  label=""
+                  maxSizeMB={2}
+                />
+              </div>
             </div>
 
             {formData.name && (

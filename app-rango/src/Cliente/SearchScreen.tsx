@@ -22,38 +22,24 @@ import {
   SearchResults,
 } from '../services/searchService';
 import { Store, MenuItem } from '../types/shared';
+import { subscribeToActiveCategories, Category } from '../services/categoryService';
 
 type SearchScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
-interface CategoryItem {
-  id: string;
-  name: string;
-  color: string;
-  subtitle?: string;
-}
-
-// Categorias de Conveniência
-const CONVENIENCE_CATEGORIES: CategoryItem[] = [
-  { id: 'mercado', name: 'Mercado', color: '#0A5847' },
-  { id: 'farmacia', name: 'Farmácia', color: '#FF9F24', subtitle: '⚡ receba rápido' },
-  { id: 'bebidas', name: 'Bebidas', color: '#FF7B52' },
-  { id: 'atacado', name: 'Atacado', color: '#E21B5A' },
-  { id: 'ofertas', name: 'Ofertas', color: '#D81F3D', subtitle: 'MÊS DO CLIENTE' },
-  { id: 'shopping', name: 'Shopping', color: '#F5A3D0' },
-];
-
-// Categorias de Restaurantes
-const RESTAURANT_CATEGORIES: CategoryItem[] = [
-  { id: 'super', name: 'Super Restaurantes', color: '#B91E3C', subtitle: '⭐' },
-  { id: 'gourmet', name: 'Gourmet', color: '#1A1A1A' },
-  { id: 'brasileira', name: 'Brasileira', color: '#E67E22' },
-  { id: 'saudavel', name: 'Saudável', color: '#F5A3C7' },
-  { id: 'marmita', name: 'Marmita', color: '#D68910' },
-  { id: 'congelados', name: 'Congelados', color: '#F5A3D0' },
-  { id: 'lanches', name: 'Lanches', color: '#FF8C52' },
-  { id: 'chinesa', name: 'Chinesa', color: '#E21B5A' },
-  { id: 'carnes', name: 'Carnes', color: '#FF7B52' },
-  { id: 'crepes', name: 'Crepes e Panquecas', color: '#E21B5A' },
+// Cores padrão para categorias (serão aplicadas ciclicamente)
+const CATEGORY_COLORS = [
+  '#EA1D2C', // Vermelho principal
+  '#0A5847', // Verde escuro
+  '#FF9F24', // Laranja
+  '#FF7B52', // Coral
+  '#E21B5A', // Rosa forte
+  '#D81F3D', // Vermelho escuro
+  '#F5A3D0', // Rosa claro
+  '#B91E3C', // Bordô
+  '#1A1A1A', // Preto
+  '#E67E22', // Laranja queimado
+  '#D68910', // Dourado
+  '#FF8C52', // Laranja claro
 ];
 
 const SearchScreen: React.FC = () => {
@@ -61,8 +47,28 @@ const SearchScreen: React.FC = () => {
 
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [results, setResults] = useState<SearchResults>({ stores: [], items: [] });
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Carregar categorias do Firestore com listener em tempo real
+  useEffect(() => {
+    console.log('🔵 SearchScreen: Inscrevendo-se nas categorias em tempo real...');
+    setLoadingCategories(true);
+    
+    const unsubscribe = subscribeToActiveCategories((loadedCategories) => {
+      setCategories(loadedCategories);
+      setLoadingCategories(false);
+      console.log('✅ SearchScreen: Categorias atualizadas em tempo real:', loadedCategories.length);
+    });
+
+    // Cleanup: cancelar listener quando o componente desmontar
+    return () => {
+      console.log('🔵 SearchScreen: Cancelando listener de categorias');
+      unsubscribe();
+    };
+  }, []);
 
   // Debounce para busca
   useEffect(() => {
@@ -89,9 +95,13 @@ const SearchScreen: React.FC = () => {
     }
   };
 
-  const handleCategoryPress = (categoryId: string) => {
+  const handleCategoryPress = (category: Category) => {
     // Navegar para tela de categoria com os resultados filtrados
-    navigation.navigate('Category', { categoryId, categoryName: categoryId });
+    console.log('🔵 SearchScreen: Navegando para categoria:', category.name);
+    navigation.navigate('Category', { 
+      categoryId: category.slug, 
+      categoryName: category.name 
+    });
   };
 
   const handleStorePress = (store: Store) => {
@@ -178,46 +188,53 @@ const SearchScreen: React.FC = () => {
     );
   };
 
-  const renderCategoriesGrid = () => (
-    <ScrollView 
-      style={styles.contentContainer} 
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Seção Conveniência */}
-      <View style={styles.categorySection}>
-        <Text style={styles.sectionTitle}>Conveniência</Text>
-        <View style={styles.gridContainer}>
-          {CONVENIENCE_CATEGORIES.map((category) => (
-            <CategoryGridCard
-              key={category.id}
-              title={category.name}
-              subtitle={category.subtitle}
-              backgroundColor={category.color}
-              onPress={() => handleCategoryPress(category.id)}
-            />
-          ))}
+  const renderCategoriesGrid = () => {
+    if (loadingCategories) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#EA1D2C" />
+          <Text style={styles.loadingText}>Carregando categorias...</Text>
         </View>
-      </View>
+      );
+    }
 
-      {/* Seção Restaurantes */}
-      <View style={styles.categorySection}>
-        <Text style={styles.sectionTitle}>Restaurantes</Text>
-        <View style={styles.gridContainer}>
-          {RESTAURANT_CATEGORIES.map((category) => (
-            <CategoryGridCard
-              key={category.id}
-              title={category.name}
-              subtitle={category.subtitle}
-              backgroundColor={category.color}
-              onPress={() => handleCategoryPress(category.id)}
-            />
-          ))}
+    if (categories.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="apps-outline" size={64} color="#CCC" />
+          <Text style={styles.emptyTitle}>Nenhuma categoria disponível</Text>
+          <Text style={styles.emptySubtitle}>
+            Aguarde enquanto novas categorias são cadastradas
+          </Text>
         </View>
-      </View>
+      );
+    }
 
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
-  );
+    return (
+      <ScrollView 
+        style={styles.contentContainer} 
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.categorySection}>
+          <Text style={styles.sectionTitle}>Todas as Categorias</Text>
+          <View style={styles.gridContainer}>
+            {categories.map((category, index) => (
+              <CategoryGridCard
+                key={category.id}
+                title={category.name}
+                subtitle={category.description}
+                backgroundColor={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                image={category.imageUrl ? { uri: category.imageUrl } : undefined}
+                onPress={() => handleCategoryPress(category)}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    );
+  };
 
   const showResults = searchText.trim().length >= 2;
 
@@ -275,6 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingVertical: 4, // Espaço extra para sombras não serem cortadas
   },
   bottomSpacing: {
     height: 40,
@@ -283,6 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 8, // Espaço extra para sombras não serem cortadas
     backgroundColor: '#F5F5F5',
   },
   section: {

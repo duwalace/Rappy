@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
     paddingVertical: 16,
+    overflow: 'visible',
   },
   header: {
     flexDirection: 'row',
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
+    paddingVertical: 8, // Espaço extra para sombras não serem cortadas
   },
 });
 

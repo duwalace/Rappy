@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   Crown,
   Tag,
-  Bike
+  Bike,
+  Image
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useSidebar } from "./ui/sidebar";
@@ -35,6 +36,11 @@ const adminMenuItems = [
     title: "Gestão de Entregadores",
     icon: Bike,
     href: "/admin/delivery",
+  },
+  {
+    title: "Banners Promocionais",
+    icon: Image,
+    href: "/admin/banners",
   },
   {
     title: "Financeiro Global",

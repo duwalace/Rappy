@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { HomeStackParamList } from '../types/navigation';
@@ -13,6 +14,7 @@ import RestaurantCard from '../components/RestaurantCard';
 import DiscountedDishCard from '../components/DiscountedDishCard';
 import PromoBannerCard from '../components/PromoBannerCard';
 import RestaurantListItem from '../components/RestaurantListItem';
+import ResponsiveBanner from '../components/ResponsiveBanner';
 
 // Dados
 import { mockCategories } from '../data/mockData';
@@ -42,7 +44,107 @@ const CategoryScreen: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState(categoryId);
   const [screenData, setScreenData] = useState<ShelfItem[]>([]);
   const [stores, setStores] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [discountedDishes, setDiscountedDishes] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [categoryBanners, setCategoryBanners] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Carregar categorias do Firebase
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const { subscribeToActiveCategories } = await import('../services/categoryService');
+        const unsubscribe = subscribeToActiveCategories((firebaseCategories) => {
+          if (firebaseCategories.length > 0) {
+            const formatted = firebaseCategories.map(cat => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              slug: cat.slug,
+              imageUrl: cat.imageUrl,
+            }));
+            setCategories(formatted);
+          } else {
+            // Fallback para categorias mock
+            setCategories(mockCategories);
+          }
+        });
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+        setCategories(mockCategories);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  // Carregar banners para tela de categoria
+  useEffect(() => {
+    const loadCategoryBanners = async () => {
+      try {
+        const { getBannersByLocation } = await import('../services/bannerService');
+        const banners = await getBannersByLocation('category');
+        setCategoryBanners(banners);
+      } catch (error) {
+        console.error('Erro ao carregar banners:', error);
+      }
+    };
+    loadCategoryBanners();
+  }, []);
+
+  // Carregar produtos com desconto do Firebase
+  useEffect(() => {
+    const loadDiscountedProducts = async () => {
+      try {
+        const { getDiscountedProducts } = await import('../services/menuService');
+        const products = await getDiscountedProducts(10);
+        setDiscountedDishes(products);
+      } catch (error) {
+        console.error('Erro ao carregar produtos com desconto:', error);
+      }
+    };
+    loadDiscountedProducts();
+  }, []);
+
+  // Carregar subcategorias (categorias de menu das lojas da categoria)
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (stores.length === 0) return;
+      
+      try {
+        const { getStoreMenuCategories } = await import('../services/menuService');
+        const allSubcategories: any[] = [];
+        
+        // Buscar categorias de menu das primeiras lojas
+        for (const store of stores.slice(0, 3)) {
+          try {
+            const categories = await getStoreMenuCategories(store.id);
+            categories.forEach(cat => {
+              // Adicionar apenas se ainda não existe (evitar duplicatas)
+              if (!allSubcategories.find(sub => sub.name.toLowerCase() === cat.name.toLowerCase())) {
+                allSubcategories.push({
+                  id: cat.id,
+                  name: cat.name,
+                  image: cat.image || `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=200&h=200&fit=crop`,
+                  storeId: store.id,
+                });
+              }
+            });
+          } catch (err) {
+            console.log(`Erro ao carregar categorias da loja ${store.id}:`, err);
+          }
+        }
+        
+        setSubcategories(allSubcategories);
+      } catch (error) {
+        console.error('Erro ao carregar subcategorias:', error);
+      }
+    };
+    
+    loadSubcategories();
+  }, [stores]);
 
   // Carregar lojas da categoria
   useEffect(() => {
@@ -113,6 +215,20 @@ const CategoryScreen: React.FC = () => {
     }
   };
 
+  // Filtrar lojas pela busca
+  const getFilteredStores = useCallback(() => {
+    if (!searchQuery.trim()) {
+      return stores;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return stores.filter(store => 
+      store.name.toLowerCase().includes(query) ||
+      store.description?.toLowerCase().includes(query) ||
+      store.category?.toLowerCase().includes(query)
+    );
+  }, [stores, searchQuery]);
+
   const handleCategoryPress = useCallback((newCategoryId: string) => {
     setActiveCategory(newCategoryId);
   }, []);
@@ -132,18 +248,41 @@ const CategoryScreen: React.FC = () => {
 
   const handleSubCategoryPress = useCallback((subCategory: any) => {
     console.log('SubCategory pressed:', subCategory);
-    // Aqui você pode filtrar por subcategoria
-  }, []);
+    // Navegar para a loja que tem essa subcategoria
+    if (subCategory.storeId) {
+      navigation.navigate('Store', {
+        storeId: subCategory.storeId,
+      });
+    }
+  }, [navigation]);
 
   const handleDishPress = useCallback((dish: any) => {
     console.log('Dish pressed:', dish);
-    // Aqui você pode navegar para a tela do prato
-  }, []);
+    // Navegar para a loja do produto
+    if (dish.storeId) {
+      navigation.navigate('Store', {
+        storeId: dish.storeId,
+      });
+    }
+  }, [navigation]);
 
   const handleBannerPress = useCallback((banner: any) => {
-    console.log('Banner pressed:', banner);
-    // Aqui você pode navegar para a promoção
-  }, []);
+    console.log('Banner pressionado:', banner.title);
+    
+    // Navegar de acordo com o tipo de link
+    if (banner.linkType === 'store' && banner.linkTarget) {
+      navigation.navigate('Store', { storeId: banner.linkTarget });
+    } else if (banner.linkType === 'category' && banner.linkTarget) {
+      navigation.navigate('Category', {
+        categoryId: banner.linkTarget,
+        categoryName: banner.title,
+      });
+    } else if (banner.linkType === 'product' && banner.linkTarget) {
+      console.log('Navegar para produto:', banner.linkTarget);
+    } else if (banner.linkType === 'external' && banner.link) {
+      console.log('Abrir link externo:', banner.link);
+    }
+  }, [navigation]);
 
   const handleSeeMorePress = useCallback(() => {
     console.log('See more pressed');
@@ -228,17 +367,9 @@ const CategoryScreen: React.FC = () => {
     }
   };
 
-  const renderHeader = () => (
-    <CategoryFilterCarousel
-      categories={mockCategories}
-      activeCategory={activeCategory}
-      onCategoryPress={handleCategoryPress}
-    />
-  );
-
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <CategoryHeader 
           categoryName={categoryName}
           onSearchChange={(text) => console.log('Search:', text)}
@@ -252,26 +383,123 @@ const CategoryScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <CategoryHeader 
         categoryName={categoryName}
-        onSearchChange={(text) => console.log('Search:', text)}
+        onSearchChange={(text) => setSearchQuery(text)}
       />
-      {stores.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhuma loja encontrada nesta categoria</Text>
-          <Text style={styles.emptySubtext}>Tente outra categoria ou volte mais tarde</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={screenData}
-          renderItem={renderScreenItem}
-          keyExtractor={(item, index) => `${item.type}-${index}`}
-          ListHeaderComponent={renderHeader}
-          showsVerticalScrollIndicator={false}
-          style={styles.flatList}
+      
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Filtro de Categorias */}
+        <CategoryFilterCarousel
+          categories={categories.length > 0 ? categories : mockCategories}
+          activeCategory={activeCategory}
+          onCategoryPress={handleCategoryPress}
         />
-      )}
+
+        {/* Subcategorias */}
+        {subcategories.length > 0 && (
+          <SubCategoryCarousel
+            data={subcategories}
+            onSubCategoryPress={handleSubCategoryPress}
+          />
+        )}
+
+        {/* Banner Promocional Grande */}
+        {categoryBanners.length > 0 && (
+          <ResponsiveBanner
+            imageUrl={categoryBanners[0].imageUrl}
+            videoUrl={categoryBanners[0].videoUrl}
+            title={categoryBanners[0].title}
+            backgroundColor={categoryBanners[0].backgroundColor}
+            onPress={() => handleBannerPress(categoryBanners[0])}
+            marginHorizontal={16}
+            marginVertical={16}
+          />
+        )}
+
+        {/* Últimas Lojas */}
+        {stores.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Últimas Lojas</Text>
+              <Text style={styles.seeMore}>Ver mais</Text>
+            </View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScrollContent}
+            >
+              {stores.slice(0, 3).map((store) => (
+                <RestaurantCard
+                  key={store.id}
+                  restaurant={store}
+                  onPress={handleRestaurantPress}
+                  onFavoritePress={handleFavoritePress}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Desconto até 35% OFF */}
+        {discountedDishes.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>Desconto até 50% OFF</Text>
+                <Text style={styles.sectionSubtitle}>Pratos incríveis com até 50% de desconto</Text>
+              </View>
+              <Text style={styles.seeMore}>Ver mais</Text>
+            </View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScrollContent}
+            >
+              {discountedDishes.map((dish) => (
+                <DiscountedDishCard
+                  key={dish.id}
+                  dish={dish}
+                  onPress={handleDishPress}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Lista Completa de Lojas */}
+        <View style={styles.storesListSection}>
+          <Text style={styles.storesListTitle}>
+            Lojas
+            {searchQuery && ` (${getFilteredStores().length})`}
+          </Text>
+          
+          {stores.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma loja encontrada nesta categoria</Text>
+              <Text style={styles.emptySubtext}>Tente outra categoria ou volte mais tarde</Text>
+            </View>
+          ) : getFilteredStores().length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma loja encontrada</Text>
+              <Text style={styles.emptySubtext}>Tente outro termo de busca</Text>
+            </View>
+          ) : (
+            getFilteredStores().map((store) => (
+              <RestaurantListItem
+                key={store.id}
+                restaurant={store}
+                onPressRestaurant={handleRestaurantPress}
+                onToggleFavorite={handleFavoritePress}
+              />
+            ))
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -279,10 +507,11 @@ const CategoryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
   },
-  flatList: {
+  scrollView: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,
@@ -295,9 +524,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+
+  // Seções
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  seeMore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#EA1D2C',
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: 16,
+  },
+
+  // Lista de Lojas
+  storesListSection: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  storesListTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
+  },
+
+  // Empty State
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 40,
     alignItems: 'center',
     paddingHorizontal: 32,
   },
@@ -312,18 +585,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-  },
-  sectionTitleContainer: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
   },
 });
 

@@ -10,6 +10,11 @@ Este é um aplicativo de delivery de comida desenvolvido em React Native com Typ
 - Carrossel de restaurantes
 - Header personalizado com endereço
 - Cards de restaurantes com avaliação e favoritos
+- **Sistema de Banners** 🆕
+  - Banners com altura fixa consistente
+  - Suporte a imagens e vídeos
+  - Responsivo em mobile, tablet e web
+  - Auto-play e navegação automática
 
 ## Como executar
 

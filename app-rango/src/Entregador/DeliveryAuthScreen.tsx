@@ -46,7 +46,7 @@ const DeliveryAuthScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
       
       {/* Imagem de Fundo */}
@@ -115,7 +115,7 @@ const DeliveryAuthScreen: React.FC = () => {
           </View>
         </View>
       </ImageBackground>
-    </View>
+    </SafeAreaView>
   );
 };
 

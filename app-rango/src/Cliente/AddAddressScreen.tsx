@@ -307,7 +307,7 @@ const AddAddressScreen: React.FC = () => {
       
       console.log('✅ Endereço salvo com sucesso!');
 
-      Alert.alert('Sucesso', 'Endereço adicionado com sucesso!', [
+      Alert.alert('Sucesso! ✅', 'Endereço adicionado com sucesso!', [
         {
           text: 'OK',
           onPress: () => {
@@ -321,7 +321,32 @@ const AddAddressScreen: React.FC = () => {
         },
       ]);
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Não foi possível salvar o endereço');
+      console.error('Erro ao salvar endereço:', error);
+      
+      // Tratamento especial para endereço duplicado
+      if (error.message === 'DUPLICATE_ADDRESS') {
+        Alert.alert(
+          'Endereço já cadastrado 📍',
+          `Este endereço já está na sua lista de endereços:\n\n${street}, ${number}${complement ? ' - ' + complement : ''}\n${neighborhood} - ${city}/${state}\nCEP: ${zipCode}\n\nVocê pode editá-lo na sua lista de endereços ao invés de criar um novo.`,
+          [
+            {
+              text: 'Ver meus endereços',
+              onPress: () => navigation.goBack(),
+              style: 'default',
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]
+        );
+      } else {
+        // Outros erros
+        Alert.alert(
+          'Erro ao salvar', 
+          error.message || 'Não foi possível salvar o endereço. Tente novamente.'
+        );
+      }
     } finally {
       setLoading(false);
     }

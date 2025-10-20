@@ -14,6 +14,7 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -123,17 +124,24 @@ const DeliveryRouteScreen = () => {
   };
 
   const openMaps = (latitude?: number, longitude?: number, address?: string) => {
+    // Usar esquema genérico geo: que funciona no Android e iOS sem API key
+    // Android: abre Google Maps | iOS: abre Apple Maps
     const destination = latitude && longitude
       ? `${latitude},${longitude}`
       : encodeURIComponent(address || '');
 
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    const url = Platform.select({
+      ios: `maps://app?daddr=${destination}`,
+      android: `geo:0,0?q=${destination}`,
+      default: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
+    });
     
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         Linking.openURL(url);
       } else {
-        Alert.alert('Erro', 'Não foi possível abrir o mapa');
+        // Fallback para OpenStreetMap no navegador (gratuito e sem API key)
+        Linking.openURL(`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`);
       }
     });
   };
@@ -234,7 +242,7 @@ const DeliveryRouteScreen = () => {
             onPress={() => openMaps(currentAddress.latitude, currentAddress.longitude, formatAddress(currentAddress))}
           >
             <Icon name="map" size={20} color="#fff" />
-            <Text style={styles.openMapsButtonText}>Abrir no Google Maps</Text>
+            <Text style={styles.openMapsButtonText}>Abrir no Mapa</Text>
           </TouchableOpacity>
         </View>
 

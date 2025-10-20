@@ -8,6 +8,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getPlatformConfig } from './adminService';
 
 export interface DateRange {
   startDate: Date;
@@ -220,6 +221,10 @@ export async function getFinancialReport(
 
     const orders: FinancialOrder[] = [];
 
+    // Buscar configurações da plataforma
+    const config = await getPlatformConfig();
+    const commissionRate = config.commissionRate / 100; // Converter % para decimal
+
     let grossRevenue = 0;
     let platformFee = 0;
     let deliveryFee = 0;
@@ -229,7 +234,7 @@ export async function getFinancialReport(
 
       const itemsTotal = data.subtotal || data.total || 0;
       const delivery = data.deliveryFee || 0;
-      const fee = itemsTotal * 0.12; // 12% de comissão da plataforma
+      const fee = (itemsTotal * commissionRate) + config.platformFee; // Taxa variável + taxa fixa
       const net = itemsTotal + delivery - fee;
 
       orders.push({

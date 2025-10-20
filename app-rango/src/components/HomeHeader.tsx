@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { spacing, fontSize, iconSize } from '../utils/responsive';
+import theme from '../styles/theme';
 
 interface HomeHeaderProps {
   address: string;
@@ -14,7 +16,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ address, onAddressPress }) => {
         <Text style={styles.addressText} numberOfLines={1}>
           {address}
         </Text>
-        <Ionicons name="chevron-down" size={16} color="#333" style={styles.arrowIcon} />
+        <Ionicons name="chevron-down" size={iconSize.sm} color={theme.colors.text} style={styles.arrowIcon} />
       </TouchableOpacity>
     </View>
   );
@@ -22,13 +24,19 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ address, onAddressPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: theme.colors.backgroundLight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   addressContainer: {
     flexDirection: 'row',
@@ -37,13 +45,13 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   addressText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginRight: 4,
+    fontSize: fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+    marginRight: spacing.xs,
   },
   arrowIcon: {
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
 });
 

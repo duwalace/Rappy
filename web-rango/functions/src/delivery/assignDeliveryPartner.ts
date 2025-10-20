@@ -19,10 +19,16 @@ const db = admin.firestore();
  */
 export const assignDeliveryPartner = functions.firestore
   .document('delivery_offers/{offerId}')
-  .onUpdate(async (change, context) => {
+  .onUpdate(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
     const offerBefore = change.before.data();
     const offerAfter = change.after.data();
     const offerId = context.params.offerId;
+    
+    // Verificar se dados existem
+    if (!offerBefore || !offerAfter) {
+      console.log('⚠️ Dados da oferta incompletos');
+      return null;
+    }
     
     // Verificar se oferta foi aceita
     if (offerBefore.status === 'open' && offerAfter.status === 'accepted') {
@@ -81,7 +87,7 @@ export const assignDeliveryPartner = functions.firestore
           .where('status', '==', 'open')
           .get();
         
-        otherOffersSnapshot.forEach((doc) => {
+        otherOffersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
           if (doc.id !== offerId) {
             batch.update(doc.ref, {
               status: 'cancelled'

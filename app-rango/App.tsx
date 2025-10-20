@@ -1,8 +1,8 @@
 // IMPORTANTE: Importar supressor de warnings ANTES de tudo
 import './src/utils/suppressWarnings';
 
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -33,7 +33,7 @@ import DeliveryHistoryScreen from './src/Entregador/DeliveryHistoryScreen';
 import DeliveryCompletionScreen from './src/Entregador/DeliveryCompletionScreen';
 import DeliveryWalletScreen from './src/Entregador/DeliveryWalletScreen';
 import LoadingScreen from './src/components/LoadingScreen';
-import PerfilLogadoScreen from './src/Cliente/PerfilLogado';
+import FloatingCartButton from './src/components/FloatingCartButton';
 import HomeScreen from './src/Cliente/HomeScreen';
 import SearchScreen from './src/Cliente/SearchScreen';
 import OrdersScreen from './src/Cliente/OrdersScreen';
@@ -43,6 +43,9 @@ import CategoryScreen from './src/Cliente/CategoryScreen';
 import StoreScreen from './src/Cliente/StoreScreen';
 import ProductScreen from './src/Cliente/ProductScreen';
 import CartScreen from './src/Cliente/CartScreen';
+import FavoritesScreen from './src/Cliente/FavoritesScreen';
+import ReviewScreen from './src/Cliente/ReviewScreen';
+import StoreReviewsScreen from './src/Cliente/StoreReviewsScreen';
 
 // Telas de Perfil
 import PersonalDataScreen from './src/Cliente/PersonalDataScreen';
@@ -91,6 +94,9 @@ function HomeStack() {
       <Stack.Screen name="Product" component={ProductScreen} />
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Address" component={AddressScreen} />
+      <Stack.Screen name="Favorites" component={FavoritesScreen} />
+      <Stack.Screen name="StoreReviews" component={StoreReviewsScreen} />
+      <Stack.Screen name="Review" component={ReviewScreen} />
       <Stack.Screen name="CheckoutAddress" component={CheckoutAddressScreen} />
       <Stack.Screen name="CheckoutPayment" component={CheckoutPaymentScreen} />
       <Stack.Screen name="CheckoutReview" component={CheckoutReviewScreen} />
@@ -202,44 +208,49 @@ function MainNavigator() {
   // Interface padrão para clientes
   console.log('👤 Renderizando interface do CLIENTE...');
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Início') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Busca') {
-            iconName = focused ? 'search' : 'search-outline';
-          } else if (route.name === 'Pedidos') {
-            iconName = focused ? 'receipt' : 'receipt-outline';
-          } else if (route.name === 'Perfil') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else {
-            iconName = 'home-outline';
-          }
+            if (route.name === 'Início') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Busca') {
+              iconName = focused ? 'search' : 'search-outline';
+            } else if (route.name === 'Pedidos') {
+              iconName = focused ? 'receipt' : 'receipt-outline';
+            } else if (route.name === 'Perfil') {
+              iconName = focused ? 'person' : 'person-outline';
+            } else {
+              iconName = 'home-outline';
+            }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#EA1D2C',
-        tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: '#E5E5E5',
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
-      })}
-    >
-      <Tab.Screen name="Início" component={HomeStack} />
-      <Tab.Screen name="Busca" component={SearchScreen} />
-      <Tab.Screen name="Pedidos" component={OrdersScreen} />
-      <Tab.Screen name="Perfil" component={ProfileStack} />
-    </Tab.Navigator>
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#EA1D2C',
+          tabBarInactiveTintColor: 'gray',
+          tabBarStyle: {
+            backgroundColor: 'white',
+            borderTopWidth: 1,
+            borderTopColor: '#E5E5E5',
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+          },
+        })}
+      >
+        <Tab.Screen name="Início" component={HomeStack} />
+        <Tab.Screen name="Busca" component={SearchScreen} />
+        <Tab.Screen name="Pedidos" component={OrdersScreen} />
+        <Tab.Screen name="Perfil" component={ProfileStack} />
+      </Tab.Navigator>
+      
+      {/* Botão flutuante de carrinho */}
+      <FloatingCartButton />
+    </View>
   );
 }
 
@@ -292,6 +303,67 @@ function RootNavigator() {
 
 // O componente App principal que "veste" tudo com os contextos
 export default function App() {
+  // Configurar viewport e estilos para web
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      // Adicionar meta viewport
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+        document.head.appendChild(meta);
+      }
+
+      // Adicionar estilos globais para web
+      const style = document.createElement('style');
+      style.textContent = `
+        * {
+          box-sizing: border-box;
+        }
+        
+        html, body, #root {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow-x: hidden;
+        }
+        
+        @media (max-width: 768px) {
+          html {
+            font-size: 16px;
+          }
+          
+          body {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+          }
+          
+          input, textarea, select {
+            font-size: 16px !important;
+          }
+        }
+        
+        @media (min-width: 769px) {
+          #root > div {
+            max-width: 768px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+          }
+        }
+        
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AuthProvider>

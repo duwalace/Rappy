@@ -146,9 +146,57 @@ export const getAddressById = async (
 };
 
 /**
+ * Verificar se já existe um endereço duplicado
+ * Compara CEP + número para determinar duplicação
+ */
+export const checkDuplicateAddress = async (
+  userId: string,
+  zipCode: string,
+  number: string,
+  street: string
+): Promise<boolean> => {
+  try {
+    const addressesRef = collection(
+      db,
+      USERS_COLLECTION,
+      userId,
+      ADDRESSES_SUBCOLLECTION
+    );
+
+    const snapshot = await getDocs(addressesRef);
+    
+    // Normalizar dados para comparação
+    const cleanZipCode = zipCode.replace(/\D/g, '');
+    const normalizedNumber = number.trim().toLowerCase();
+    const normalizedStreet = street.trim().toLowerCase();
+
+    // Verificar se existe endereço com mesmo CEP + número + rua
+    const hasDuplicate = snapshot.docs.some((doc) => {
+      const data = doc.data();
+      const docZipCode = data.zipCode?.replace(/\D/g, '');
+      const docNumber = data.number?.trim().toLowerCase();
+      const docStreet = data.street?.trim().toLowerCase();
+
+      return (
+        docZipCode === cleanZipCode &&
+        docNumber === normalizedNumber &&
+        docStreet === normalizedStreet
+      );
+    });
+
+    return hasDuplicate;
+  } catch (error) {
+    console.error('Erro ao verificar duplicação:', error);
+    // Em caso de erro, permitir continuar (não bloquear o usuário)
+    return false;
+  }
+};
+
+/**
  * Adicionar novo endereço
  * 
  * Se for marcado como padrão, remove o padrão dos outros
+ * Verifica duplicação antes de salvar
  */
 export const addAddress = async (
   userId: string,
@@ -178,6 +226,18 @@ export const addAddress = async (
 
     if (!data.state || data.state.length !== 2) {
       throw new Error('Estado deve ter 2 caracteres (ex: SP)');
+    }
+
+    // ⚠️ VERIFICAR DUPLICAÇÃO
+    const isDuplicate = await checkDuplicateAddress(
+      userId,
+      data.zipCode,
+      data.number,
+      data.street
+    );
+
+    if (isDuplicate) {
+      throw new Error('DUPLICATE_ADDRESS');
     }
 
     const addressesRef = collection(

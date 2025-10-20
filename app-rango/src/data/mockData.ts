@@ -1,10 +1,46 @@
 export const mockCategories = [
-  { id: '1', name: 'Restaurantes', icon: 'restaurant' as const },
-  { id: '2', name: 'Mercado', icon: 'storefront' as const },
-  { id: '3', name: 'Bebidas', icon: 'wine' as const },
-  { id: '4', name: 'Farmácia', icon: 'medical' as const },
-  { id: '5', name: 'Pet Shop', icon: 'paw' as const },
-  { id: '6', name: 'Shopping', icon: 'bag' as const },
+  { 
+    id: '1', 
+    name: 'Restaurantes', 
+    icon: 'restaurant' as const,
+    slug: 'restaurantes',
+    imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=200&h=200&fit=crop',
+  },
+  { 
+    id: '2', 
+    name: 'Mercado', 
+    icon: 'storefront' as const,
+    slug: 'mercado',
+    imageUrl: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=200&h=200&fit=crop',
+  },
+  { 
+    id: '3', 
+    name: 'Bebidas', 
+    icon: 'wine' as const,
+    slug: 'bebidas',
+    imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=200&h=200&fit=crop',
+  },
+  { 
+    id: '4', 
+    name: 'Farmácia', 
+    icon: 'medical' as const,
+    slug: 'farmacia',
+    imageUrl: 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=200&h=200&fit=crop',
+  },
+  { 
+    id: '5', 
+    name: 'Pet Shop', 
+    icon: 'paw' as const,
+    slug: 'pet-shop',
+    imageUrl: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=200&h=200&fit=crop',
+  },
+  { 
+    id: '6', 
+    name: 'Shopping', 
+    icon: 'bag' as const,
+    slug: 'shopping',
+    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=200&fit=crop',
+  },
 ];
 
 export const mockRestaurants = [

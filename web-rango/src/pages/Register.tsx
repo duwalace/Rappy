@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -6,6 +6,7 @@ import { auth, db } from '@/lib/firebase';
 import { createStore } from '@/services/storeService';
 import { fetchAddressByCEP, formatCEP, isValidCEP } from '@/services/cepService';
 import { geocodeAddress, areValidCoordinates } from '@/services/geocodingService';
+import { getStoreTypes, StoreType } from '@/services/adminService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +33,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
-import { ALL_CATEGORIES, CATEGORIES } from '@/constants/categories';
 import loginBg from '@/assets/login-bg.jpg';
 
 export default function Register() {
@@ -46,6 +46,10 @@ export default function Register() {
   const [loadingCEP, setLoadingCEP] = useState(false);
   const [loadingGeocode, setLoadingGeocode] = useState(false);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // Estado para categorias
+  const [storeTypes, setStoreTypes] = useState<StoreType[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Dados da conta
   const [accountData, setAccountData] = useState({
@@ -123,6 +127,30 @@ export default function Register() {
   ];
 
   const progress = ((currentStep + 1) / steps.length) * 100;
+
+  // Carregar categorias do Firestore
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const types = await getStoreTypes();
+        // Filtrar apenas categorias ativas
+        const activeTypes = types.filter(type => type.isActive);
+        setStoreTypes(activeTypes);
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+        toast({
+          title: 'Erro ao carregar categorias',
+          description: 'Não foi possível carregar as categorias disponíveis',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   // Funções de formatação
   const formatPhone = (value: string) => {
@@ -788,22 +816,28 @@ export default function Register() {
                         value={storeData.category}
                         onChange={(e) => handleFieldChange('category', e.target.value, 'store')}
                         className={`w-full pl-9 h-10 border rounded-md bg-white ${errors.category ? 'border-red-500' : 'border-gray-300'}`}
+                        disabled={loadingCategories}
                       >
-                        <option value="">Selecione uma categoria</option>
-                        {CATEGORIES.MAIN.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
+                        <option value="">
+                          {loadingCategories ? 'Carregando categorias...' : 'Selecione uma categoria'}
+                        </option>
+                        {storeTypes.map(type => (
+                          <option key={type.id} value={type.name}>
+                            {type.icon} {type.name}
+                          </option>
                         ))}
-                        <optgroup label="Subcategorias de Restaurantes">
-                          {CATEGORIES.RESTAURANT_SUBCATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </optgroup>
                       </select>
                     </div>
                     {errors.category && (
                       <p className="text-xs text-red-600 mt-0.5 flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.category}
+                      </p>
+                    )}
+                    {loadingCategories && (
+                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Carregando categorias disponíveis...
                       </p>
                     )}
                   </div>

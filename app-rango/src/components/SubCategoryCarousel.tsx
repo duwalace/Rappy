@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 interface SubCategory {
   id: string;
@@ -20,11 +22,18 @@ const SubCategoryCarousel: React.FC<SubCategoryCarouselProps> = ({
     <TouchableOpacity
       style={styles.subCategoryItem}
       onPress={() => onSubCategoryPress?.(item)}
+      activeOpacity={0.7}
     >
       <View style={styles.imageContainer}>
-        <Image source={{ uri: item.image }} style={styles.subCategoryImage} />
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.subCategoryImage}
+          resizeMode="cover"
+        />
       </View>
-      <Text style={styles.subCategoryName}>{item.name}</Text>
+      <Text style={styles.subCategoryName} numberOfLines={1}>
+        {item.name}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -46,40 +55,42 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
     paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   listContainer: {
     paddingHorizontal: 16,
+    gap: 16,
   },
   subCategoryItem: {
     alignItems: 'center',
-    marginRight: 20,
-    width: 70,
+    width: width > 768 ? 90 : 75,
   },
   imageContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#F5F5F5',
+    width: width > 768 ? 80 : 70,
+    height: width > 768 ? 80 : 70,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
     elevation: 3,
+    overflow: 'hidden',
   },
   subCategoryImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: '100%',
+    height: '100%',
   },
   subCategoryName: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: width > 768 ? 13 : 11,
+    fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: width > 768 ? 16 : 14,
   },
 });
 

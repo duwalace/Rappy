@@ -368,6 +368,123 @@ export const getPopularProducts = async (limit: number = 20): Promise<MenuItem[]
 };
 
 /**
+ * Buscar produtos com desconto de todas as lojas
+ * Para a tela de categorias
+ */
+export const getDiscountedProducts = async (limit: number = 10): Promise<any[]> => {
+  try {
+    console.log('🔵 Buscando produtos com desconto...');
+    
+    // Buscar todos os produtos disponíveis
+    const q = query(
+      collection(db, ITEMS_COLLECTION),
+      where('isAvailable', '==', true)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const discountedProducts: any[] = [];
+    
+    // Para cada produto, buscar informações da loja
+    for (const docSnap of querySnapshot.docs) {
+      const productData = docSnap.data();
+      const product = { id: docSnap.id, ...productData };
+      
+      // Simular desconto (20-50% de desconto) se o produto for popular
+      if (product.isPopular) {
+        const storeDoc = await getDoc(doc(db, 'stores', product.storeId));
+        if (storeDoc.exists()) {
+          const store = storeDoc.data();
+          
+          // Calcular desconto (entre 20% e 50%)
+          const discountPercent = Math.floor(Math.random() * 30) + 20; // 20-50%
+          const originalPrice = product.price;
+          const discountedPrice = originalPrice * (1 - discountPercent / 100);
+          
+          discountedProducts.push({
+            id: product.id,
+            name: product.name,
+            image: product.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
+            discountedPrice: `R$ ${discountedPrice.toFixed(2).replace('.', ',')}`,
+            originalPrice: `R$ ${originalPrice.toFixed(2).replace('.', ',')}`,
+            discountPercentage: `-${discountPercent}%`,
+            storeName: store.name,
+            storeId: product.storeId,
+            storeRating: store.rating || 4.5,
+            deliveryTime: store.delivery?.deliveryTime || '30-40 min',
+          });
+        }
+      }
+      
+      if (discountedProducts.length >= limit) break;
+    }
+    
+    console.log('✅ Produtos com desconto encontrados:', discountedProducts.length);
+    return discountedProducts;
+  } catch (error) {
+    console.error('❌ Erro ao buscar produtos com desconto:', error);
+    return [];
+  }
+};
+
+/**
+ * Buscar produtos de lojas de uma categoria específica
+ */
+export const getProductsByStoreCategory = async (
+  categorySlug: string, 
+  limit: number = 10
+): Promise<any[]> => {
+  try {
+    console.log('🔵 Buscando produtos da categoria de lojas:', categorySlug);
+    
+    // Primeiro, buscar lojas da categoria
+    const { getStoresByCategorySlug } = await import('./storeService');
+    const stores = await getStoresByCategorySlug(categorySlug);
+    
+    if (stores.length === 0) {
+      console.log('⚠️ Nenhuma loja encontrada na categoria');
+      return [];
+    }
+    
+    const storeIds = stores.map(s => s.id);
+    console.log('   Lojas encontradas:', storeIds.length);
+    
+    // Buscar produtos dessas lojas
+    const products: any[] = [];
+    
+    for (const storeId of storeIds) {
+      const q = query(
+        collection(db, ITEMS_COLLECTION),
+        where('storeId', '==', storeId),
+        where('isAvailable', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach((docSnap) => {
+        const productData = docSnap.data();
+        const store = stores.find(s => s.id === storeId);
+        
+        products.push({
+          id: docSnap.id,
+          ...productData,
+          storeName: store?.name,
+          storeRating: store?.rating || 4.5,
+          deliveryTime: store?.delivery?.deliveryTime || '30-40 min',
+        });
+      });
+      
+      if (products.length >= limit) break;
+    }
+    
+    console.log('✅ Produtos encontrados:', products.length);
+    return products.slice(0, limit);
+  } catch (error) {
+    console.error('❌ Erro ao buscar produtos por categoria de loja:', error);
+    return [];
+  }
+};
+
+/**
  * Formatar preço para exibição
  */
 export const formatPrice = (price: number): string => {

@@ -11,6 +11,7 @@ import RestaurantCarousel from '../components/RestaurantCarousel';
 import ProductCarousel from '../components/ProductCarousel';
 import FilterBar from '../components/FilterBar';
 import RestaurantListItem from '../components/RestaurantListItem';
+import BannersCarousel from '../components/BannersCarousel';
 import { 
   mockCategories, 
   mockFilters
@@ -18,7 +19,8 @@ import {
 import { subscribeToActiveStores } from '../services/storeService';
 import { useAuth } from '../contexts/AuthContext';
 import { getFavoriteStores } from '../services/favoriteService';
-import { getActiveCategories, getDefaultCategories } from '../services/categoryService';
+import { subscribeToActiveCategories, getDefaultCategories } from '../services/categoryService';
+import { Banner } from '../services/bannerService';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -29,6 +31,7 @@ const HomeScreen: React.FC = () => {
   // Estados para dados reais do Firebase
   const [stores, setStores] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<any[]>([]);
   const [pizzaProducts, setPizzaProducts] = useState<any[]>([]);
   const [marmitaProducts, setMarmitaProducts] = useState<any[]>([]);
@@ -39,47 +42,70 @@ const HomeScreen: React.FC = () => {
   // Popular banco automaticamente se vazio
   const [autoSeedChecked, setAutoSeedChecked] = useState(false);
 
-  // Carregar categorias
+  // Carregar categorias com listener em tempo real
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        // Tentar carregar do Firebase
-        const firebaseCategories = await getActiveCategories();
-        
-        if (firebaseCategories.length > 0) {
-          // Formatar para o componente
-          const formatted = firebaseCategories.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            icon: cat.icon,
-          }));
-          setCategories(formatted);
-          console.log('✅ Categorias carregadas do Firebase:', formatted.length);
-        } else {
-          // Fallback para categorias padrão
-          const defaultCategories = getDefaultCategories();
-          const formatted = defaultCategories.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            icon: cat.icon,
-          }));
-          setCategories(formatted);
-          console.log('✅ Usando categorias padrão:', formatted.length);
-        }
-      } catch (error) {
-        console.error('❌ Erro ao carregar categorias:', error);
+    console.log('🔵 HomeScreen: Inscrevendo-se nas categorias em tempo real...');
+    
+    const unsubscribe = subscribeToActiveCategories((firebaseCategories) => {
+      if (firebaseCategories.length > 0) {
+        // Formatar para o componente
+        const formatted = firebaseCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+          slug: cat.slug,
+          imageUrl: cat.imageUrl,
+        }));
+        setCategories(formatted);
+        console.log('✅ Categorias atualizadas em tempo real:', formatted.length);
+      } else {
         // Fallback para categorias padrão
         const defaultCategories = getDefaultCategories();
         const formatted = defaultCategories.map(cat => ({
           id: cat.id,
           name: cat.name,
           icon: cat.icon,
+          slug: cat.slug,
+          imageUrl: cat.imageUrl,
         }));
         setCategories(formatted);
+        console.log('✅ Usando categorias padrão:', formatted.length);
+      }
+    });
+
+    // Cleanup: cancelar listener quando o componente desmontar
+    return () => {
+      console.log('🔵 HomeScreen: Cancelando listener de categorias');
+      unsubscribe();
+    };
+  }, []);
+
+  // Carregar banners com listener em tempo real (apenas para HOME)
+  useEffect(() => {
+    console.log('🎨 HomeScreen: Carregando banners para tela HOME...');
+    
+    const loadHomeBanners = async () => {
+      try {
+        const { getBannersByLocation } = await import('../services/bannerService');
+        const homeBanners = await getBannersByLocation('home');
+        setBanners(homeBanners);
+        console.log('✅ Banners HOME carregados:', homeBanners.length);
+      } catch (error) {
+        console.error('❌ Erro ao carregar banners HOME:', error);
+        setBanners([]);
       }
     };
 
-    loadCategories();
+    loadHomeBanners();
+    
+    // Recarregar a cada 5 minutos para pegar novos banners
+    const interval = setInterval(loadHomeBanners, 5 * 60 * 1000);
+
+    // Cleanup
+    return () => {
+      console.log('🎨 HomeScreen: Limpando interval de banners');
+      clearInterval(interval);
+    };
   }, []);
 
   // Estados dos filtros
@@ -347,9 +373,9 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleCategoryPress = (category: any) => {
-    console.log('Categoria selecionada:', category.name);
+    console.log('Categoria selecionada:', category.name, 'slug:', category.slug);
     navigation.navigate('Category', {
-      categoryId: category.id,
+      categoryId: category.slug || category.id, // Usar slug, fallback para id
       categoryName: category.name,
     });
   };
@@ -427,6 +453,26 @@ const HomeScreen: React.FC = () => {
     console.log('Toggle favorito:', restaurant.name);
   };
 
+  const handleBannerPress = (banner: Banner) => {
+    console.log('Banner pressionado:', banner.title);
+    
+    // Navegar de acordo com o tipo de link
+    if (banner.linkType === 'store' && banner.linkTarget) {
+      navigation.navigate('Store', { storeId: banner.linkTarget });
+    } else if (banner.linkType === 'category' && banner.linkTarget) {
+      navigation.navigate('Category', {
+        categoryId: banner.linkTarget,
+        categoryName: banner.title,
+      });
+    } else if (banner.linkType === 'product' && banner.linkTarget) {
+      // TODO: Implementar navegação direta para produto
+      console.log('Navegar para produto:', banner.linkTarget);
+    } else if (banner.linkType === 'external' && banner.link) {
+      // TODO: Abrir link externo
+      console.log('Abrir link externo:', banner.link);
+    }
+  };
+
   // Separar lojas por categoria (para seção "Restaurantes")
   const restaurantStores = stores.filter(store => {
     const category = store.category?.toLowerCase() || '';
@@ -451,10 +497,13 @@ const HomeScreen: React.FC = () => {
           onCategoryPress={handleCategoryPress}
         />
         
-        {/* Placeholder de Banners */}
-        <View style={styles.bannersPlaceholder}>
-          <Text style={styles.placeholderText}>Banners Promocionais</Text>
-        </View>
+        {/* Carrossel de Banners */}
+        {banners.length > 0 && (
+          <BannersCarousel 
+            banners={banners}
+            onBannerPress={handleBannerPress}
+          />
+        )}
         
         {productsLoading ? (
           <View style={styles.loadingContainer}>
@@ -581,20 +630,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
-  },
-  bannersPlaceholder: {
-    height: 120,
-    backgroundColor: '#F5F5F5',
-    marginVertical: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    borderRadius: 12,
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: '#999',
-    fontWeight: '500',
   },
   restaurantsList: {
     paddingHorizontal: 16,

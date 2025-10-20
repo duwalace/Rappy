@@ -11,11 +11,23 @@ import {
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+
+// Importar MapView condicionalmente (não funciona na web)
+let MapView: any = null;
+let Marker: any = null;
+let Circle: any = null;
+let PROVIDER_DEFAULT: any = null;
+
+if (Platform.OS !== 'web') {
+  const RNMaps = require('react-native-maps');
+  MapView = RNMaps.default;
+  Marker = RNMaps.Marker;
+  Circle = RNMaps.Circle;
+  PROVIDER_DEFAULT = RNMaps.PROVIDER_DEFAULT;
+}
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { GOOGLE_MAPS_API_KEY } from '../config/googleMaps';
 import { useAuth } from '../contexts/AuthContext';
 import {
   subscribeToDeliveryPerson,
@@ -271,89 +283,62 @@ const DeliveryHomeScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Mapa - Área Principal */}
+      {/* Mapa - Área Principal (SEM GOOGLE CLOUD) */}
       <View style={styles.mapContainer}>
-        {currentLocation ? (
-          <WebView
-            style={styles.map}
-            source={{
-              html: `
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                    <style>
-                      * { margin: 0; padding: 0; }
-                      html, body, #map { height: 100%; width: 100%; }
-                    </style>
-                  </head>
-                  <body>
-                    <div id="map"></div>
-                    <script>
-                      function initMap() {
-                        const position = { 
-                          lat: ${currentLocation.coords.latitude}, 
-                          lng: ${currentLocation.coords.longitude} 
-                        };
-                        
-                        const map = new google.maps.Map(document.getElementById("map"), {
-                          zoom: 15,
-                          center: position,
-                          mapTypeControl: false,
-                          streetViewControl: false,
-                          fullscreenControl: false,
-                          styles: [
-                            {
-                              "featureType": "poi",
-                              "elementType": "labels",
-                              "stylers": [{ "visibility": "off" }]
-                            }
-                          ]
-                        });
-                        
-                        // Marcador customizado do entregador
-                        new google.maps.Marker({
-                          position: position,
-                          map: map,
-                          icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 12,
-                            fillColor: "#FF6B35",
-                            fillOpacity: 1,
-                            strokeColor: "#FFFFFF",
-                            strokeWeight: 3,
-                          },
-                          title: "Você está aqui"
-                        });
-                        
-                        // Círculo ao redor da posição
-                        new google.maps.Circle({
-                          strokeColor: "#FF6B35",
-                          strokeOpacity: 0.3,
-                          strokeWeight: 2,
-                          fillColor: "#FF6B35",
-                          fillOpacity: 0.1,
-                          map: map,
-                          center: position,
-                          radius: 500,
-                        });
-                      }
-                    </script>
-                    <script src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap" async defer></script>
-                  </body>
-                </html>
-              `,
-            }}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            startInLoadingState={true}
-            renderLoading={() => (
-              <View style={styles.mapLoading}>
-                <ActivityIndicator size="large" color="#FF6B35" />
-                <Text style={styles.mapLoadingText}>Carregando mapa...</Text>
-              </View>
+        {Platform.OS === 'web' ? (
+          // Placeholder para Web (mapas não funcionam na web)
+          <View style={styles.mapPlaceholder}>
+            <Ionicons name="map-outline" size={64} color="#FF6B35" />
+            <Text style={styles.mapPlaceholderText}>Mapa disponível apenas no app mobile</Text>
+            {currentLocation && (
+              <Text style={styles.locationText}>
+                Lat: {currentLocation.coords.latitude.toFixed(6)}, Lng: {currentLocation.coords.longitude.toFixed(6)}
+              </Text>
             )}
-          />
+          </View>
+        ) : currentLocation && MapView ? (
+          <MapView
+            style={styles.map}
+            provider={PROVIDER_DEFAULT} // Usa mapas nativos (Apple Maps iOS, OpenStreetMap Android)
+            initialRegion={{
+              latitude: currentLocation.coords.latitude,
+              longitude: currentLocation.coords.longitude,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+            showsCompass={true}
+            loadingEnabled={true}
+            loadingIndicatorColor="#FF6B35"
+            rotateEnabled={true}
+            pitchEnabled={false}
+          >
+            {/* Marcador da posição atual do entregador */}
+            <Marker
+              coordinate={{
+                latitude: currentLocation.coords.latitude,
+                longitude: currentLocation.coords.longitude,
+              }}
+              title="Você está aqui"
+              description="Entregador"
+              pinColor="#FF6B35"
+            />
+            
+            {/* Círculo de raio de busca (5km) */}
+            {isOnline && (
+              <Circle
+                center={{
+                  latitude: currentLocation.coords.latitude,
+                  longitude: currentLocation.coords.longitude,
+                }}
+                radius={5000} // 5km em metros
+                fillColor="rgba(255, 107, 53, 0.1)"
+                strokeColor="rgba(255, 107, 53, 0.3)"
+                strokeWidth={2}
+              />
+            )}
+          </MapView>
         ) : (
           <View style={styles.mapPlaceholder}>
             <ActivityIndicator size="large" color="#FF6B35" />

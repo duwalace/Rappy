@@ -46,6 +46,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
 import { Order, OrderStatus } from "@/types/shared";
+import { createDeliveryOffer, retryDeliveryOffer } from "@/services/deliveryLogicService";
 
 const Orders = () => {
   const { user } = useAuth();
@@ -123,14 +124,60 @@ const Orders = () => {
   const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
     try {
       await updateOrderStatus(orderId, newStatus);
-      toast({
-        title: "Sucesso",
-        description: `Status do pedido atualizado para ${getStatusLabel(newStatus)}`,
-      });
+      
+      // Se confirmando pedido, criar oferta de entrega (sem Cloud Functions)
+      if (newStatus === 'confirmed' && user?.storeId) {
+        console.log('📦 Criando oferta de entrega para pedido:', orderId);
+        const result = await createDeliveryOffer(orderId, user.storeId);
+        
+        if (result.success) {
+          toast({
+            title: "Sucesso",
+            description: `Pedido confirmado! Procurando entregadores disponíveis...`,
+          });
+        } else {
+          toast({
+            title: "Aviso",
+            description: result.error || "Pedido confirmado, mas não foi possível criar oferta de entrega",
+            variant: "default",
+          });
+        }
+      } else {
+        toast({
+          title: "Sucesso",
+          description: `Status do pedido atualizado para ${getStatusLabel(newStatus)}`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Erro",
         description: "Erro ao atualizar status do pedido",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para procurar mais entregadores
+  const handleFindMoreDeliverers = async (orderId: string) => {
+    try {
+      const result = await retryDeliveryOffer(orderId);
+      
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Procurando entregadores em área maior...",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Erro ao procurar entregadores",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao procurar entregadores",
         variant: "destructive",
       });
     }
@@ -356,13 +403,24 @@ const Orders = () => {
                           </Button>
                         )}
                         {order.status === 'confirmed' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusChange(order.id, 'preparing')}
-                          >
-                            Preparar
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleStatusChange(order.id, 'preparing')}
+                            >
+                              Preparar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleFindMoreDeliverers(order.id)}
+                              title="Procurar mais entregadores"
+                            >
+                              <Truck className="h-4 w-4 mr-1" />
+                              Buscar +
+                            </Button>
+                          </>
                         )}
                         {order.status === 'preparing' && (
                           <Button

@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -136,8 +137,23 @@ const DeliveryTracker: React.FC<DeliveryTrackerProps> = ({ orderId, onStatusChan
   const handleOpenMaps = () => {
     if (deliveryInfo?.partner_current_location) {
       const { latitude, longitude } = deliveryInfo.partner_current_location;
-      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      Linking.openURL(url);
+      
+      // Usar esquema genérico que funciona no Android (Google Maps) e iOS (Apple Maps)
+      // sem depender de API key do Google Cloud
+      const url = Platform.select({
+        ios: `maps://app?ll=${latitude},${longitude}`,
+        android: `geo:${latitude},${longitude}`,
+        default: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
+      });
+      
+      Linking.canOpenURL(url).then((supported) => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          // Fallback para OpenStreetMap (gratuito e sem API key)
+          Linking.openURL(`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`);
+        }
+      });
     }
   };
 

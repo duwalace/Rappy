@@ -421,8 +421,10 @@ export async function getFinancialTransactions(
     const ordersQuery = query(collection(db, 'orders'), ...constraints);
     const ordersSnapshot = await getDocs(ordersQuery);
 
-    const commissionRate = 0.10;
-    const platformFee = 2;
+    // Buscar configurações da plataforma
+    const config = await getPlatformConfig();
+    const commissionRate = config.commissionRate / 100; // Converter % para decimal
+    const platformFee = config.platformFee;
 
     const transactions: FinancialTransaction[] = ordersSnapshot.docs.map(doc => {
       const order = doc.data();
@@ -479,10 +481,12 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
 
 export async function updatePlatformConfig(config: Partial<PlatformConfig>) {
   const configRef = doc(db, 'platform_config', 'global');
-  await updateDoc(configRef, {
+  
+  // Usar setDoc com merge para criar o documento se não existir
+  await setDoc(configRef, {
     ...config,
     updatedAt: Timestamp.now()
-  });
+  }, { merge: true });
 }
 
 // ==================== OPERAÇÕES E SUPORTE ====================
@@ -542,7 +546,12 @@ export async function getStoreTypes(): Promise<StoreType[]> {
 /**
  * Cria um novo tipo de loja
  */
-export async function addStoreType(name: string, icon?: string, description?: string): Promise<string> {
+export async function addStoreType(
+  name: string, 
+  icon?: string, 
+  description?: string, 
+  imageUrl?: string
+): Promise<string> {
   try {
     // Gerar slug a partir do nome
     const slug = name
@@ -568,6 +577,7 @@ export async function addStoreType(name: string, icon?: string, description?: st
       slug,
       icon: icon || '🏪',
       description: description || '',
+      imageUrl: imageUrl || '',
       isActive: true,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
@@ -588,7 +598,7 @@ export async function addStoreType(name: string, icon?: string, description?: st
  */
 export async function updateStoreType(
   id: string, 
-  updates: { name?: string; icon?: string; description?: string; isActive?: boolean }
+  updates: { name?: string; icon?: string; description?: string; imageUrl?: string; isActive?: boolean }
 ): Promise<void> {
   try {
     const typeRef = doc(db, 'store_types', id);

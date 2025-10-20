@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { ImageUploadService } from '@/services/imageUploadService';
+import { CloudinaryUploadService } from '@/services/cloudinaryUploadService';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
@@ -64,10 +64,9 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
       const uploadIndex = uploadingFiles.length + i;
       
       try {
-        const result = await ImageUploadService.uploadProductImage(
+        const result = await CloudinaryUploadService.uploadProductImage(
           file,
-          storeId,
-          productId,
+          `stores/${storeId}/products/${productId}`,
           (progress) => {
             setUploadingFiles(prev => 
               prev.map((uf, idx) => 
@@ -89,7 +88,7 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
           id: `img-${Date.now()}-${i}`,
           url: result.url,
           thumbnailUrl: result.thumbnailUrl,
-          storageRef: result.storageRef,
+          storageRef: result.publicId, // Cloudinary usa publicId
           isPrimary: images.length === 0, // Primeira imagem é primary
           order: images.length + i,
           uploadedAt: new Date()
@@ -168,9 +167,9 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
     if (!confirm('Deseja remover esta imagem?')) return;
     
     try {
-      // Deletar do Storage
+      // Deletar do Cloudinary (se possível)
       if (image.storageRef) {
-        await ImageUploadService.deleteProductImage(image.storageRef);
+        await CloudinaryUploadService.deleteImage(image.storageRef);
       }
       
       // Remover da lista

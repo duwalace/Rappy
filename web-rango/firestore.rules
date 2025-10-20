@@ -117,24 +117,24 @@ service cloud.firestore {
                        request.auth.uid == request.resource.data.customerId &&
                        request.resource.data.status == 'pending';
       
-      // Atualizar:
-      // - Dono da loja pode atualizar status e atribuir entregador
+      // Atualizar (SEM CLOUD FUNCTIONS):
+      // - Dono da loja pode atualizar status e delivery info (createDeliveryOffer)
       // - Cliente pode cancelar (apenas se status for 'pending')
-      // - Entregador pode atualizar status de entrega
+      // - Entregador pode atualizar status de entrega (assignDeliveryPartner, completeDelivery)
       allow update: if isSignedIn() && (
-        // Loja pode atualizar
-        (isStoreOwner(resource.data.storeId) && 
-         request.resource.data.customerId == resource.data.customerId) ||
+        // Loja pode atualizar pedido e delivery (createDeliveryOffer)
+        (getUserData().storeId == resource.data.storeId && 
+         getUserData().role == 'dono_da_loja') ||
         
         // Cliente pode cancelar se ainda pendente
         (request.auth.uid == resource.data.customerId && 
          resource.data.status == 'pending' && 
          request.resource.data.status == 'cancelled') ||
         
-        // Entregador pode atualizar status de entrega
-        (isDeliveryPerson() && 
-         request.auth.uid == resource.data.deliveryPersonId &&
-         request.resource.data.status in ['in_delivery', 'delivered']) ||
+        // Entregador pode atualizar (assignDeliveryPartner, completeDelivery)
+        (getUserData().role == 'entregador' && 
+         (request.auth.uid == resource.data.deliveryPersonId ||
+          request.resource.data.get('delivery', {}).get('partner_id', '') == request.auth.uid)) ||
         
         // Admin pode tudo
         isAdmin()
@@ -164,14 +164,21 @@ service cloud.firestore {
       allow create: if isSignedIn() && 
                        request.auth.uid == request.resource.data.userId;
       
-      // Atualizar: 
-      // - Próprio entregador pode atualizar location e operational_status
+      // Atualizar (SEM CLOUD FUNCTIONS): 
+      // - Próprio entregador pode atualizar location, status, earnings (assignDeliveryPartner, completeDelivery)
+      // - Sistema pode atualizar ao aceitar/completar entrega
       // - Admin pode atualizar tudo
       allow update: if isSignedIn() && (
-        // Entregador atualiza apenas campos permitidos
+        // Entregador atualiza seus dados (incluindo earnings ao completar entrega)
         (getUserData().uid == resource.data.userId && 
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['current_location', 'last_location_update', 'operational_status', 'current_order_id', 'last_login', 'metadata'])) ||
+           .hasOnly(['current_location', 'last_location_update', 'operational_status', 
+                     'current_order_id', 'last_login', 'metadata', 'earnings', 'stats'])) ||
+        
+        // Sistema (entregador) ao aceitar/completar entrega
+        (getUserData().role == 'entregador' && 
+         request.auth.uid == resource.data.userId) ||
+        
         // Admin pode atualizar tudo
         isAdmin()
       );
@@ -181,7 +188,7 @@ service cloud.firestore {
     }
     
     // ==========================================
-    // COLEÇÃO: delivery_offers
+    // COLEÇÃO: delivery_offers (SEM CLOUD FUNCTIONS)
     // ==========================================
     match /delivery_offers/{offerId} {
       // Leitura:
@@ -194,18 +201,27 @@ service cloud.firestore {
         isAdmin()
       );
       
-      // Criar: apenas via Cloud Function ou Admin
-      allow create: if isAdmin();
+      // Criar: Dono da loja ou Admin (sem Cloud Functions)
+      allow create: if isSignedIn() && (
+        getUserData().role == 'dono_da_loja' || 
+        getUserData().role == 'dono_do_site' ||
+        isAdmin()
+      );
       
       // Atualizar:
-      // - Entregador pode aceitar oferta (mudar status para accepted)
-      // - Cloud Function/Admin pode atualizar tudo
+      // - Entregador pode aceitar oferta
+      // - Dono da loja pode expandir raio (retry)
+      // - Admin pode tudo
       allow update: if isSignedIn() && (
-        // Entregador aceita oferta
-        (request.auth.uid in resource.data.visible_to_partners &&
+        // Entregador aceita oferta (usando assignDeliveryPartner)
+        (getUserData().role == 'entregador' &&
          resource.data.status == 'open' &&
-         request.resource.data.status == 'accepted' &&
-         request.resource.data.accepted_by == request.auth.uid) ||
+         request.resource.data.status == 'accepted') ||
+        
+        // Loja pode expandir raio (retryDeliveryOffer)
+        (getUserData().storeId == resource.data.store_id &&
+         getUserData().role == 'dono_da_loja') ||
+        
         // Admin
         isAdmin()
       );
@@ -215,7 +231,27 @@ service cloud.firestore {
     }
     
     // ==========================================
-    // COLEÇÃO: delivery_earnings
+    // COLEÇÃO: delivery_transactions (SEM CLOUD FUNCTIONS)
+    // ==========================================
+    match /delivery_transactions/{transactionId} {
+      // Leitura: apenas próprio entregador e admin
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.partner_id ||
+        isAdmin()
+      );
+      
+      // Criar: Sistema pode criar ao completar entrega (completeDelivery)
+      allow create: if isSignedIn() && (
+        getUserData().role == 'entregador' ||
+        isAdmin()
+      );
+      
+      // Atualizar/Deletar: apenas Admin
+      allow update, delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLEÇÃO: delivery_earnings (LEGACY - Manter para compatibilidade)
     // ==========================================
     match /delivery_earnings/{earningId} {
       // Leitura: apenas próprio entregador e admin
@@ -224,7 +260,7 @@ service cloud.firestore {
         isAdmin()
       );
       
-      // Criar/Atualizar/Deletar: apenas Cloud Function ou Admin
+      // Criar/Atualizar/Deletar: apenas Admin
       allow create, update, delete: if isAdmin();
     }
     
@@ -278,6 +314,28 @@ service cloud.firestore {
       
       // Atualizar/Deletar: apenas admin
       allow update, delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLEÇÃO: store_types (Categorias de Loja)
+    // ==========================================
+    match /store_types/{typeId} {
+      // Leitura pública (necessário para formulário de registro e clientes)
+      allow read: if true;
+      
+      // Escrita: apenas admin
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLEÇÃO: banners (Banners Promocionais)
+    // ==========================================
+    match /banners/{bannerId} {
+      // Leitura pública (necessário para exibir no app)
+      allow read: if true;
+      
+      // Escrita: apenas admin
+      allow create, update, delete: if isAdmin();
     }
     
     // ==========================================

@@ -135,7 +135,8 @@ export default function ActiveDeliveries() {
   };
 
   const handleOpenMaps = (latitude: number, longitude: number) => {
-    window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, "_blank");
+    // Usar OpenStreetMap ao invés de Google Maps (gratuito e sem API key)
+    window.open(`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=15`, "_blank");
   };
 
   const handleCall = (phone: string) => {
